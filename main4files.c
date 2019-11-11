@@ -1,12 +1,12 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   main4two.c                                         :+:      :+:    :+:   */
+/*   main4files.c                                       :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: mli <mli@student.42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2019/11/11 14:26:57 by mli               #+#    #+#             */
-/*   Updated: 2019/11/11 14:27:02 by mli              ###   ########.fr       */
+/*   Updated: 2019/11/12 00:17:51 by mli              ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,33 +15,44 @@
 #include <stdio.h>
 #include <fcntl.h>
 
+int		fd_open(int	*fd, int size)
+{
+	int i = 0;
+
+	while (i < size)
+		if (fd[i++] == 1)
+			return (1);
+	return (0);
+}
+
 int		main(int argc, char **argv)
 {
 	char	*line;
-	int		fd[2];
-	int		fd_open[2];
-	int		fd_read[2];
-	int 	i = 0;
+	int		fd[10];
+	int		fd_read[10] = {1, 1, 1, 1, 1, 1, 1, 1, 1, 1};
+	int		max = argc - 1;
+	int 	i = -1;
 	int		j = 1;
 
-	fd_open[0] = 1; fd_open[1] = 1;
-	if (argc == 3)
-		if ((fd[0] = open(argv[1], O_RDONLY)) && (fd[1] = open(argv[2], O_RDONLY)))
+	if (argc > 1)
+		while (++i < max)
+			fd[i] = open(argv[i + 1], O_RDONLY);
+	i = 0;
+	while (fd_open(fd_read, max))
+	{
+		if (fd_read[i % (max)])
 		{
-			while (fd_open[0] || fd_open[1])
-			{
-				if (fd_open[i % 2])
-				{
-					fd_open[i % 2] = ((fd_read[i % 2] = get_next_line(fd[i % 2], &line)) == 1);
-					printf("RETURNED[FILE:%d][%d][%d]:%s\n", i % 2, fd_read[i % 2], j++, line);
-					free(line);
-				}
-				i++;
-			}
-			close(fd[0]);
-			close(fd[1]);
+			fd_read[i % (max)] = get_next_line(fd[i % max], &line);
+			printf("RETURNED[FILE:%d][%d][%d]:%s\n", i % max, fd_read[i % max], j++, line);
+			free(line);
 		}
-	printf("\nBoucle inf, leaks ?\n");
-	while (1);
+		i++;
+	}
+	i = -1;
+	if (argc > 1)
+		while (++i < max)
+			close(fd[i]);
+	//	printf("\nBoucle inf, leaks ?\n");
+	//	while (1);
 	return (0);
 }
